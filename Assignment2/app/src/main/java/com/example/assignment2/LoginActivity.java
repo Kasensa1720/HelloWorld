@@ -2,104 +2,105 @@ package com.example.assignment2;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import database.DatabaseHelper;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText etUsername, etPassword;
-    private Button btnLogin;
-    private TextView tvSignUpLink;
-    private SharedPreferences userPrefs;
+    private EditText editEmail, editPassword;
+    private Button btnLogin, btnSignUp;
+    private DatabaseHelper dbHelper;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_login); // Your existing login layout
 
-        userPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        dbHelper = new DatabaseHelper(this);
+        sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+
         initializeViews();
-        setupClickListeners();
+        setupListeners();
+
+        // Check if user is already logged in
+        if (isUserLoggedIn()) {
+            navigateToFacultyList();
+        }
     }
 
     private void initializeViews() {
-        etUsername = findViewById(R.id.et_username);
-        etPassword = findViewById(R.id.et_password);
-        btnLogin = findViewById(R.id.btn_login);
-        tvSignUpLink = findViewById(R.id.tv_signup_link);
+        editEmail = findViewById(R.id.editEmail); // Your existing email field
+        editPassword = findViewById(R.id.editPassword); // Your existing password field
+        btnLogin = findViewById(R.id.btnLogin); // Your existing login button
+        btnSignUp = findViewById(R.id.btnSignUp); // Your existing signup button
     }
 
-    private void setupClickListeners() {
-        btnLogin.setOnClickListener(v -> performLogin());
-        tvSignUpLink.setOnClickListener(v -> navigateToSignUp());
-    }
-
-    private void performLogin() {
-        clearErrors();
-
-        String username = etUsername.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
-
-        if (TextUtils.isEmpty(username)) {
-            etUsername.setError("Username is required");
-            etUsername.requestFocus();
-            return;
-        }
-        if (TextUtils.isEmpty(password)) {
-            etPassword.setError("Password is required");
-            etPassword.requestFocus();
-            return;
-        }
-
-        // Admin login → go to user list
-        if (username.equals("admin") && password.equals("password")) {
-            Toast.makeText(this, "Admin login successful!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, UserListActivity.class));
-            finish();
-            return;
-        }
-
-        // Multi-user check
-        int nextId = userPrefs.getInt("next_user_id", 1);
-        boolean found = false;
-        for (int i = 1; i < nextId; i++) {
-            String savedName = userPrefs.getString("user_" + i + "_name", "");
-            String savedEmail = userPrefs.getString("user_" + i + "_email", "");
-            String savedPass = userPrefs.getString("user_" + i + "_password", "");
-            if ((username.equalsIgnoreCase(savedName) || username.equalsIgnoreCase(savedEmail)) && password.equals(savedPass)) {
-                found = true;
-                Intent intent = new Intent(this, UserDetailsActivity.class);
-                intent.putExtra("userId", "USER" + String.format("%03d", i));
-                intent.putExtra("fullName", savedName);
-                intent.putExtra("email", savedEmail);
-                intent.putExtra("phone", userPrefs.getString("user_" + i + "_phone", ""));
-                intent.putExtra("gender", userPrefs.getString("user_" + i + "_gender", ""));
-                intent.putExtra("newsletter", userPrefs.getBoolean("user_" + i + "_newsletter", false));
-                intent.putExtra("password", savedPass);
-                intent.putExtra("loginType", "registered");
-                Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-                startActivity(intent);
-                finish();
-                break;
+    private void setupListeners() {
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loginUser();
             }
+        });
+
+        btnSignUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void loginUser() {
+        String email = editEmail.getText().toString().trim();
+        String password = editPassword.getText().toString().trim();
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        if (!found) {
-            Toast.makeText(this, "Invalid username or password!", Toast.LENGTH_LONG).show();
+        boolean isValidUser = dbHelper.checkUser(email, password);
+        if (isValidUser) {
+            // Get user details and save to shared preferences
+            Cursor cursor = dbHelper.getUserByEmail(email);
+            if (cursor != null && cursor.moveToFirst()) {
+                String userId = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ID));
+                String username = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USERNAME));
+
+                // Save user session
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("USER_ID", userId);
+                editor.putString("USERNAME", username);
+                editor.putString("EMAIL", email);
+                editor.putBoolean("IS_LOGGED_IN", true);
+                editor.apply();
+
+                cursor.close();
+
+                Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
+                navigateToFacultyList();
+            }
+        } else {
+            Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void clearErrors() {
-        etUsername.setError(null);
-        etPassword.setError(null);
+    private boolean isUserLoggedIn() {
+        return sharedPreferences.getBoolean("IS_LOGGED_IN", false);
     }
 
-    private void navigateToSignUp() {
-        startActivity(new Intent(this, SignUpActivity.class));
+    private void navigateToFacultyList() {
+        Intent intent = new Intent(LoginActivity.this, FacultyListActivity.class);
+        startActivity(intent);
+        finish(); // Close login activity so user can't go back
     }
 }

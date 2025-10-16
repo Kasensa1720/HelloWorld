@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Patterns;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -12,6 +13,8 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import database.DatabaseHelper;
+
 public class SignUpActivity extends AppCompatActivity {
 
     private EditText etFullName, etEmail, etPassword, etConfirmPassword, etPhone;
@@ -19,14 +22,14 @@ public class SignUpActivity extends AppCompatActivity {
     private RadioButton rbMale, rbFemale;
     private CheckBox cbTerms, cbNewsletter;
     private Button btnSignUp, btnBackToLogin;
-    private SharedPreferences userPrefs;
+    private DatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        userPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        databaseHelper = new DatabaseHelper(this);
         initializeViews();
         setupClickListeners();
     }
@@ -97,33 +100,30 @@ public class SignUpActivity extends AppCompatActivity {
         String gender = rbMale.isChecked() ? "Male" : "Female";
         boolean newsletter = cbNewsletter.isChecked();
 
-        // Multi-user save
-        int nextId = userPrefs.getInt("next_user_id", 1);
-        SharedPreferences.Editor editor = userPrefs.edit();
-        String idKey = "user_" + nextId + "_";
-        editor.putString(idKey + "name", fullName);
-        editor.putString(idKey + "email", email);
-        editor.putString(idKey + "password", password);
-        editor.putString(idKey + "phone", phone);
-        editor.putString(idKey + "gender", gender);
-        editor.putBoolean(idKey + "newsletter", newsletter);
-        editor.putInt("next_user_id", nextId + 1);
-        editor.apply();
+        // Generate user ID
+        String userId = "USER" + System.currentTimeMillis();
 
-        Toast.makeText(this, "Account created!", Toast.LENGTH_SHORT).show();
+        // Save to SQLite database
+        boolean isInserted = databaseHelper.addUser(userId, fullName, password, gender, email, phone);
 
-        // Explicit Intent: All details
-        Intent intent = new Intent(this, UserDetailsActivity.class);
-        intent.putExtra("userId", "USER" + String.format("%03d", nextId));
-        intent.putExtra("fullName", fullName);
-        intent.putExtra("email", email);
-        intent.putExtra("phone", phone);
-        intent.putExtra("gender", gender);
-        intent.putExtra("newsletter", newsletter);
-        intent.putExtra("password", password);
-        intent.putExtra("loginType", "signup");
-        startActivity(intent);
-        finish();
+        if (isInserted) {
+            Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
+
+            // Explicit Intent: All details
+            Intent intent = new Intent(this, UserDetailsActivity.class);
+            intent.putExtra("userId", userId);
+            intent.putExtra("fullName", fullName);
+            intent.putExtra("email", email);
+            intent.putExtra("phone", phone);
+            intent.putExtra("gender", gender);
+            intent.putExtra("newsletter", newsletter);
+            intent.putExtra("password", password);
+            intent.putExtra("loginType", "signup");
+            startActivity(intent);
+            finish();
+        } else {
+            Toast.makeText(this, "Registration failed! User might already exist.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void clearErrors() {
@@ -143,6 +143,12 @@ public class SignUpActivity extends AppCompatActivity {
         }
         return hasUpper && hasLower && hasDigit;
     }
-}
 
-//commit made to sign up 1
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (databaseHelper != null) {
+            databaseHelper.close();
+        }
+    }
+}
