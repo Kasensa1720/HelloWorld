@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textFacultyName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Faculty Name"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/textFacultyId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Faculty ID"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/textDeanName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dean Name"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/textCreatedBy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Created By"
+        android:textSize="14sp"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btnViewStudents"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Students"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnViewCourses"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Courses"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnEditFaculty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Faculty"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@android:color/holo_blue_light" />
+
+    <Button
+        android:id="@+id/btnDeleteFaculty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete Faculty"
+        android:backgroundTint="@android:color/holo_red_light" />
+
+</LinearLayout>
