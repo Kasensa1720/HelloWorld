@@ -138,4 +138,28 @@ public class EnrollmentDAO {
         cursor.close();
         return courseIds;
     }
+
+    // Add this method to EnrollmentDAO.java
+    public List<String> getEnrolledCoursesByStudent(String studentId) {
+        List<String> courses = new ArrayList<>();
+        String query = "SELECT c." + DatabaseHelper.COLUMN_TITLE +
+                " FROM " + DatabaseHelper.TABLE_ENROLLMENTS + " e " +
+                "INNER JOIN " + DatabaseHelper.TABLE_COURSES + " c ON " +
+                "e." + DatabaseHelper.COLUMN_COURSE_ID_FK + " = c." + DatabaseHelper.COLUMN_COURSE_ID + " " +
+                "WHERE e." + DatabaseHelper.COLUMN_STUDENT_ID_FK + " = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{studentId});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int courseTitleIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_TITLE);
+                if (courseTitleIndex != -1) {
+                    String courseTitle = cursor.getString(courseTitleIndex);
+                    courses.add(courseTitle);
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return courses;
+    }
 }

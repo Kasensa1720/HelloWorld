@@ -1,8 +1,9 @@
-// utils/CSVExporter.java (Enhanced)
+// utils/CSVExporter.java
 package utils;
 
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 import dao.EnrollmentDAO;
 import dao.StudentDAO;
 import model.Student;
@@ -16,6 +17,8 @@ import java.util.Locale;
 
 public class CSVExporter {
 
+    private static final String TAG = "CSVExporter";
+
     public static boolean exportStudentsToCSV(Context context) {
         StudentDAO studentDAO = new StudentDAO(context);
         EnrollmentDAO enrollmentDAO = new EnrollmentDAO(context);
@@ -25,20 +28,28 @@ public class CSVExporter {
 
         List<Student> students = studentDAO.getAllStudents();
 
-        // Create downloads directory if it doesn't exist
-        File downloadsDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS);
-        if (!downloadsDir.exists()) {
-            downloadsDir.mkdirs();
-        }
-
-        // Create file with timestamp
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                .format(new Date());
-        String fileName = "students_with_enrollments_" + timeStamp + ".csv";
-        File file = new File(downloadsDir, fileName);
-
         try {
+            // Get the app's external files directory (doesn't require permissions on newer Android)
+            File downloadsDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            if (downloadsDir == null) {
+                // Fallback to internal storage
+                downloadsDir = new File(context.getFilesDir(), "exports");
+            }
+
+            if (!downloadsDir.exists()) {
+                boolean created = downloadsDir.mkdirs();
+                if (!created) {
+                    Log.e(TAG, "Failed to create directory: " + downloadsDir.getAbsolutePath());
+                    return false;
+                }
+            }
+
+            // Create file with timestamp
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+                    .format(new Date());
+            String fileName = "students_export_" + timeStamp + ".csv";
+            File file = new File(downloadsDir, fileName);
+
             FileWriter writer = new FileWriter(file);
 
             // Write header with enrollment information
@@ -53,14 +64,13 @@ public class CSVExporter {
                 writer.append(escapeCsvField(student.getPhone())).append(",");
 
                 // Get enrolled courses for this student
-                List<String> enrolledCourseIds = enrollmentDAO.getEnrolledCourseIdsByStudent(
-                        student.getStudentId());
+                List<String> enrolledCourses = enrollmentDAO.getEnrolledCoursesByStudent(student.getStudentId());
                 StringBuilder coursesBuilder = new StringBuilder();
-                for (String courseId : enrolledCourseIds) {
+                for (String course : enrolledCourses) {
                     if (coursesBuilder.length() > 0) {
                         coursesBuilder.append("; ");
                     }
-                    coursesBuilder.append(courseId);
+                    coursesBuilder.append(course);
                 }
 
                 writer.append(escapeCsvField(coursesBuilder.toString())).append("\n");
@@ -69,24 +79,35 @@ public class CSVExporter {
             writer.flush();
             writer.close();
 
-            studentDAO.close();
-            enrollmentDAO.close();
-
+            Log.d(TAG, "CSV exported successfully to: " + file.getAbsolutePath());
             return true;
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error exporting CSV: " + e.getMessage(), e);
+            return false;
+        } catch (Exception e) {
+            Log.e(TAG, "Unexpected error: " + e.getMessage(), e);
+            return false;
+        } finally {
             studentDAO.close();
             enrollmentDAO.close();
-            return false;
         }
     }
 
     private static String escapeCsvField(String field) {
         if (field == null) return "";
-        if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
+        if (field.contains(",") || field.contains("\"") || field.contains("\n") || field.contains("\r")) {
             return "\"" + field.replace("\"", "\"\"") + "\"";
         }
         return field;
+    }
+
+    // Helper method to get the export directory path for display
+    public static String getExportDirectoryPath(Context context) {
+        File downloadsDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        if (downloadsDir != null) {
+            return downloadsDir.getAbsolutePath();
+        }
+        return new File(context.getFilesDir(), "exports").getAbsolutePath();
     }
 }

@@ -10,6 +10,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.a25661_midterm.R;
+
+import utils.CSVExporter;
 //import com.auca.midterm.R;
 
 public class MainActivity extends AppCompatActivity {
@@ -56,17 +58,38 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Update the CSV export button in MainActivity.java
+        // In MainActivity.java - update the CSV export button
         btnExportCSV.setOnClickListener(v -> {
-            boolean success = utils.CSVExporter.exportStudentsToCSV(MainActivity.this);
-            if (success) {
-                android.widget.Toast.makeText(MainActivity.this,
-                        "CSV exported successfully to Downloads folder",
-                        android.widget.Toast.LENGTH_LONG).show();
-            } else {
-                android.widget.Toast.makeText(MainActivity.this,
-                        "CSV export failed",
-                        android.widget.Toast.LENGTH_SHORT).show();
-            }
+            // Show a progress dialog
+            androidx.appcompat.app.AlertDialog progressDialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Exporting CSV")
+                    .setMessage("Please wait...")
+                    .setCancelable(false)
+                    .create();
+            progressDialog.show();
+
+            // Run export in background thread
+            new Thread(() -> {
+                boolean success = CSVExporter.exportStudentsToCSV(MainActivity.this);
+
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    if (success) {
+                        String exportPath = CSVExporter.getExportDirectoryPath(MainActivity.this);
+                        new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
+                                .setTitle("Export Successful")
+                                .setMessage("CSV file has been exported to:\n" + exportPath)
+                                .setPositiveButton("OK", null)
+                                .show();
+                    } else {
+                        new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
+                                .setTitle("Export Failed")
+                                .setMessage("Failed to export CSV file. Please check storage permissions and try again.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                    }
+                });
+            }).start();
         });
     }
 }

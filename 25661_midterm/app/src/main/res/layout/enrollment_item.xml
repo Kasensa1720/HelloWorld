@@ -7,12 +7,15 @@
     android:background="?android:attr/selectableItemBackground"
     android:gravity="center_vertical">
 
-    <ImageView
+    <!-- Replace the private system drawable with a simple shape or text -->
+    <TextView
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@android:drawable/ic_menu_forward"
-        android:layout_marginEnd="12dp"
-        android:tint="@color/text_secondary" />
+        android:text="→"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginEnd="12dp" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -39,12 +42,17 @@
 
     </LinearLayout>
 
-    <ImageButton
+    <!-- Replace the private system drawable with Material icon or remove -->
+    <Button
         android:id="@+id/btnDeleteEnrollment"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@android:drawable/ic_menu_delete"
-        android:background="?android:attr/selectableItemBackground"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:text="×"
+        android:textSize="18sp"
+        android:textColor="@color/white"
+        android:background="@color/accent_color"
+        android:gravity="center"
+        android:padding="0dp"
         android:contentDescription="Delete enrollment" />
 
 </LinearLayout>
