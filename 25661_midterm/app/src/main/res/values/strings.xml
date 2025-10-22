@@ -1,3 +1,59 @@
 <resources>
     <string name="app_name">25661_midterm</string>
+
+    <!-- Main Activity -->
+    <string name="main_title">AUCA University App</string>
+    <string name="student_management">Student Management</string>
+    <string name="course_management">Course Management</string>
+    <string name="enrollments">Enrollments</string>
+    <string name="export_csv">Export to CSV</string>
+
+    <!-- Student Management -->
+    <string name="add_student">Add New Student</string>
+    <string name="edit_student">Edit Student</string>
+    <string name="students_list">Students List</string>
+
+    <!-- Course Management -->
+    <string name="add_course">Add New Course</string>
+    <string name="edit_course">Edit Course</string>
+    <string name="courses_list">Courses List</string>
+
+    <!-- Enrollment -->
+    <string name="enroll_student">Enroll Student</string>
+    <string name="select_student">Select Student</string>
+    <string name="select_course">Select Course</string>
+    <string name="current_enrollments">Current Enrollments</string>
+
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+
+    <!-- Labels -->
+    <string name="student_id">Student ID</string>
+    <string name="full_name">Full Name</string>
+    <string name="gender">Gender</string>
+    <string name="email">Email</string>
+    <string name="phone">Phone</string>
+    <string name="course_id">Course ID</string>
+    <string name="course_title">Course Title</string>
+    <string name="course_code">Course Code</string>
+    <string name="credits">Credits</string>
+
+    <!-- Gender Options -->
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+
+    <!-- Messages -->
+    <string name="student_added">Student added successfully</string>
+    <string name="student_updated">Student updated successfully</string>
+    <string name="student_deleted">Student deleted successfully</string>
+    <string name="course_added">Course added successfully</string>
+    <string name="course_updated">Course updated successfully</string>
+    <string name="course_deleted">Course deleted successfully</string>
+    <string name="enrollment_success">Student enrolled successfully</string>
+    <string name="enrollment_exists">Student is already enrolled in this course</string>
+    <string name="csv_export_success">CSV exported successfully to Downloads folder</string>
+    <string name="csv_export_failed">CSV export failed</string>
 </resources>
